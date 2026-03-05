@@ -22,8 +22,8 @@ The tool reads a CSV/TSV file containing primer sequences and outputs additional
 Clone the repository:
 
 ```
-git clone https://github.com/yourusername/primer-analyzer.git
-cd primer-analyzer
+git clone https://github.com/nhatminhhatesyou/primer-analyzer.git
+
 ```
 
 Create a virtual environment (recommended):
@@ -83,10 +83,7 @@ PrimerSeq
 Run the CLI tool:
 
 ```
-python -m primer_analyzer.cli \
-    --in input.csv \
-    --out output.csv \
-    --col PrimerSeq
+python -m primer_analyzer.cli --in input.csv --out output.csv --col PrimerSeq
 ```
 
 Optional arguments:
@@ -128,15 +125,20 @@ The output file will contain the original input columns plus additional calculat
 ## Project Structure
 
 ```
-primer_analyzer/
+primer-analyzer-idt/
 │
-├── cli.py            # Command line interface
-├── metrics.py        # GC, Tm, dimer, hairpin calculations
-├── degenerate.py     # Degenerate base expansion utilities
-├── idt_api.py        # IDT API client
-├── config.py         # Default analysis parameters
+├── primer_analyzer/          # Main Python package
+│   ├── cli.py                # Command line interface
+│   ├── metrics.py            # GC, Tm, dimer, hairpin calculations
+│   ├── degenerate.py         # Degenerate base expansion utilities
+│   ├── idt_api.py            # IDT API client
+│   └── config.py             # Default analysis parameters
 │
-├── requirements.txt
+├── primers.csv               # Example input file
+├── scored.csv                # Example output file
+│
+├── requirements.txt          # Python dependencies
+├── .gitignore
 └── README.md
 ```
 
