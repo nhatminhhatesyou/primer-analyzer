@@ -1,49 +1,60 @@
-# Primer Analyzer
+# 🧬 Primer Analyzer
 
-Primer Analyzer is a lightweight Python CLI tool for analyzing DNA primer sequences using both **local calculations** and the **IDT OligoAnalyzer API**.
+**Primer Analyzer** is a lightweight Python CLI tool for analyzing DNA primer sequences.  
+It combines **local thermodynamic calculations** with the **IDT OligoAnalyzer API** to compute common primer quality metrics.
 
-The tool reads a CSV/TSV file containing primer sequences and outputs additional metrics such as **GC content**, **melting temperature (Tm)**, **self‑dimer ΔG**, and **hairpin ΔG**.
+The tool reads a CSV/TSV file containing primer sequences and outputs additional metrics such as:
 
----
+- 🧪 **GC content**
+- 🌡️ **Melting temperature (Tm)**
+- 🔗 **Self‑dimer ΔG**
+- 🪢 **Hairpin ΔG**
 
-## Features
-
-- GC content calculation (supports **degenerate IUPAC bases**)
-- Melting temperature (Tm) analysis via the **IDT OligoAnalyzer API**
-- Self‑dimer stability analysis
-- Hairpin structure analysis with **batch API calls**
-- Parallel processing for faster computation
-- Degenerate primer expansion with a configurable limit
+The tool is designed to run inside **Docker** so the environment is reproducible and does not depend on the host operating system.
 
 ---
 
-## Installation
+# ✨ Features
 
-Clone the repository:
+- 🧬 GC content calculation (supports **degenerate IUPAC bases**)
+- 🌡️ Melting temperature (Tm) calculation using the **IDT OligoAnalyzer API**
+- 🔗 Self‑dimer stability analysis via **IDT API**
+- 🪢 Hairpin analysis using **UNAFold / OligoArrayAux (local)**
+- ⚡ Parallel processing for faster analysis
+- 🧩 Degenerate primer expansion with configurable limits
+- 🐳 Fully containerized with **Docker**
+
+---
+
+# 🐳 Installation (Docker)
+
+The recommended way to run Primer Analyzer is using Docker.
+
+## 1️⃣ Clone the repository
 
 ```
 git clone https://github.com/nhatminhhatesyou/primer-analyzer.git
-
 ```
 
-Create a virtual environment (recommended):
+## 2️⃣ Build the Docker image
 
 ```
-python -m venv venv
-source venv/bin/activate
+docker build -t primer-analyzer .
 ```
 
-Install dependencies:
+This will:
 
-```
-pip install -r requirements.txt
-```
+- install Python dependencies
+- build **mFold / UNAFold tools**
+- prepare the CLI environment
 
 ---
 
-## Environment Variables
+# 🔑 Environment Variables
 
-Create a `.env` file containing your **IDT API credentials**:
+Create a `.env` file containing your **IDT API credentials**.
+
+Example:
 
 ```
 IDT_TOKEN_URL=your_token_url
@@ -56,13 +67,20 @@ IDT_USERNAME=your_username
 IDT_PASSWORD=your_password
 ```
 
+These credentials are required for:
+
+- **Tm calculation**
+- **Self‑dimer analysis**
+
+Hairpin analysis runs **locally** and does not require the API.
+
 ---
 
-## Input Format
+# 📄 Input Format
 
-The tool expects a CSV/TSV file with a column containing primer sequences.
+The tool expects a CSV or TSV file containing primer sequences.
 
-Example:
+Example input:
 
 | PrimerSeq |
 |-----------|
@@ -76,38 +94,49 @@ Default column name:
 PrimerSeq
 ```
 
+You can change the column name using the `--col` argument.
+
 ---
 
-## Usage
+# ▶️ Usage
 
-Run the CLI tool:
+Run the tool using Docker:
 
 ```
-python -m primer_analyzer.cli --in input.csv --out output.csv --col PrimerSeq
+docker run --rm \
+-v $(pwd):/app \
+primer-analyzer \
+--in input.csv \
+--out output.csv \
+--col PrimerSeq
 ```
 
-Optional arguments:
+### Explanation
 
-| Argument | Description | Default |
-|---------|-------------|--------|
-| `--sep` | Input file separator | `\t` |
-| `--batch` | Batch size for hairpin API calls | `100` |
+| Argument | Description |
+|--------|-------------|
+| `--in` | Input CSV/TSV file |
+| `--out` | Output file with calculated metrics |
+| `--col` | Column containing primer sequences |
+| `--sep` | Input file separator (`\t` default) |
+| `--workers` | Number of parallel threads |
 
 Example:
 
 ```
-python -m primer_analyzer.cli \
-    --in primers.tsv \
-    --out analyzed_primers.csv \
-    --col PrimerSeq \
-    --batch 100
+docker run --rm \
+-v $(pwd):/app \
+primer-analyzer \
+--in primers.tsv \
+--out analyzed_primers.csv \
+--col PrimerSeq
 ```
 
 ---
 
-## Output
+# 📊 Output
 
-The output file will contain the original input columns plus additional calculated metrics:
+The output file contains the original input columns plus additional calculated metrics.
 
 | Column | Description |
 |------|-------------|
@@ -118,36 +147,95 @@ The output file will contain the original input columns plus additional calculat
 | Tm_max_C | Maximum melting temperature |
 | Tm_mean_C | Mean melting temperature |
 | SelfDimer_dG_min | Minimum self‑dimer free energy |
-| Hairpin_dG_min | Minimum hairpin free energy |
+| Hairpin_dG_min | Hairpin free energy (local UNAFold calculation) |
 
 ---
 
-## Project Structure
+# 🧠 How Calculations Work
+
+Primer Analyzer uses a hybrid approach:
+
+| Metric | Method |
+|------|------|
+| GC content | Local calculation |
+| Hairpin | **UNAFold / OligoArrayAux (local)** |
+| Tm | **IDT OligoAnalyzer API** |
+| Self‑dimer | **IDT OligoAnalyzer API** |
+
+Hairpin was moved to a local calculation because the legacy IDT API sometimes produced results that differed from the official OligoAnalyzer tool.
+
+---
+
+# 📂 Project Structure
 
 ```
-primer-analyzer-idt/
+primer-analyzer/
 │
-├── primer_analyzer/          # Main Python package
-│   ├── cli.py                # Command line interface
-│   ├── metrics.py            # GC, Tm, dimer, hairpin calculations
-│   ├── degenerate.py         # Degenerate base expansion utilities
-│   ├── idt_api.py            # IDT API client
-│   └── config.py             # Default analysis parameters
+├── primer_analyzer/
+│   ├── cli.py
+│   ├── metrics.py
+│   ├── hairpin_unafold.py
+│   ├── degenerate.py
+│   ├── idt_api.py
+│   └── config.py
 │
-├── primers.csv               # Example input file
-├── scored.csv                # Example output file
+├── vendor/
+│   ├── mfold-3.6.tar
+│   └── oligoarrayaux-3.8.1.tar
 │
-├── requirements.txt          # Python dependencies
+├── Dockerfile
+├── requirements.txt
+├── README.md
+├── .env
+├── .dockerignore
 ├── .gitignore
-└── README.md
+│
+│
+├──input.csv
+└──output.csv
 ```
 
 ---
 
-## Notes
+# ⚠️ Notes
 
-- Hairpin analysis uses **batch API calls** to reduce request overhead.
-- Self‑dimer and Tm calculations are executed in **parallel** for performance.
+- Hairpin analysis runs **locally** using UNAFold.
+- Tm and Self‑dimer calculations still require the **IDT API**.
 - Degenerate sequences are expanded only up to a configurable limit to avoid combinatorial explosion.
 
 ---
+
+# 🧬 Example Workflow
+
+```
+Primer CSV
+     │
+     ▼
+Primer Analyzer CLI
+     │
+     ├── GC content (local)
+     ├── Hairpin (UNAFold)
+     ├── Tm (IDT API)
+     └── Self‑dimer (IDT API)
+     │
+     ▼
+Analyzed CSV output
+```
+
+---
+
+# 💡 Future Improvements
+
+Possible future improvements:
+
+- 🔬 Local Tm calculation (remove API dependency)
+- 🔗 Local self‑dimer calculation
+- 🚀 GPU / batch optimization for large primer sets
+
+---
+
+# 🧑‍💻 Author
+
+Built for fast primer screening and reproducible primer analysis pipelines.
+
+Happy PCR designing! 🧬✨
