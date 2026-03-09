@@ -6,6 +6,9 @@ DEFAULT_PARAMS = {
     "FoldingTemp":25,
     "max_variants": 128,
     "max_loop": 30,
-    "NucleotideType": "string"
+    "NucleotideType": "string",
+    "hairpin_temp_c": 25.0,
+    "hairpin_sodium_m": 0.05,
+    "hairpin_magnesium_m": 0.003,
     
 }

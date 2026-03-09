@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dotenv import load_dotenv
 
 from .config import DEFAULT_PARAMS
-from .metrics import gc_content, calc_tm, calc_self_dimer
+from .metrics import gc_content, calc_tm, calc_self_dimer, calc_hairpin
 from .idt_api import analyze_hairpin_batch
 
 load_dotenv()
@@ -24,12 +24,6 @@ def run_parallel(func, items, workers=8, desc="Processing"):
             results[idx] = f.result()
 
     return results
-
-
-def chunked(xs, size):
-    """Split a list into smaller batches."""
-    for i in range(0, len(xs), size):
-        yield xs[i:i+size]
 
 
 def main():
@@ -68,23 +62,13 @@ def main():
         desc="SelfDimer"
     )
 
-    # 3) call IDT API to calculate hairpin energy (batched)
-    hairpin_dg = [None] * len(seqs)
-    idx = 0
-
-    for batch in tqdm(list(chunked(seqs, args.batch)), desc="HairpinBatch"):
-        res = analyze_hairpin_batch(batch, DEFAULT_PARAMS)
-
-        batch_dg = []
-        for r in res:
-            dg = r.get("DeltaG", r.get("deltaG"))
-            batch_dg.append(float(dg) if dg is not None else None)
-
-        # store results in correct position
-        hairpin_dg[idx: idx + len(batch)] = batch_dg
-        idx += len(batch)
-
-    hp_rows = [{"Hairpin_dG_min": dg} for dg in hairpin_dg]
+    # 3) Hairpin (local UNAFold / OligoArrayAux)
+    hp_rows = run_parallel(
+        lambda s: calc_hairpin(s, DEFAULT_PARAMS),
+        seqs,
+        workers=8,
+        desc="Hairpin"
+    )
 
     # merge original data with calculated metrics
     out_df = pd.concat(

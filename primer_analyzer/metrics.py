@@ -1,7 +1,7 @@
 from .degenerate import expand_degenerate, has_degenerate
 from .config import DEFAULT_PARAMS
 from .idt_api import analyze_sequence, analyze_hairpin_batch, analyze_self_dimer
-
+from .hairpin_unafold import calc_hairpin_unafold
 
 def gc_content(seq):
     """Calculate GC% statistics (min, max, mean). Supports degenerate primers."""
@@ -83,3 +83,24 @@ def calc_hairpin_batch(sequences, params):
         dgs.append(float(dg) if dg is not None else None)
 
     return dgs
+
+def calc_hairpin(seq, params=None):
+    """
+    Calculate hairpin ΔG using UNAFold/OligoArrayAux.
+    """
+    params = params or DEFAULT_PARAMS
+
+    temp_c = params.get("hairpin_temp_c", 25.0)
+    sodium_m = params.get("hairpin_sodium_m", 0.05)
+    magnesium_m = params.get("hairpin_magnesium_m", 0.003)
+
+    res = calc_hairpin_unafold(
+        seq=seq,
+        temp_c=temp_c,
+        sodium_m=sodium_m,
+        magnesium_m=magnesium_m,
+    )
+
+    return {
+        "Hairpin_dG_min": res["hairpin_dg"],
+    }
