@@ -63,12 +63,23 @@ def calc_self_dimer(seq):
     """Calculate minimum self-dimer ΔG for a sequence."""
 
     res = analyze_self_dimer(seq)  # API usually returns a list
+    pairs = []
+    for x in res:
+        dg = _extract_dg(x)
+        if dg is not None:
+            pairs.append((float(dg), x["BasePairs"]))
+    
+    if not pairs:
+        return{
+            "SelfDimer_dG_min": None,
+            "SelfDimer_BasePairs": None,
+        }
 
-    dgs = [_extract_dg(x) for x in res]
-    dgs = [float(d) for d in dgs if d is not None]
+    dg_min, basepairs = min(pairs, key=lambda x: x[0])
 
     return {
-        "SelfDimer_dG_min": min(dgs) if dgs else None
+        "SelfDimer_dG_min": dg_min,
+        "SelfDimer_BasePairs": basepairs,
     }
 
 
