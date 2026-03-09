@@ -147,6 +147,7 @@ The output file contains the original input columns plus additional calculated m
 | Tm_max_C | Maximum melting temperature |
 | Tm_mean_C | Mean melting temperature |
 | SelfDimer_dG_min | Minimum self‑dimer free energy |
+| Hairpin_BasePairs | Number of base pairs in the predicted hairpin structure |
 | Hairpin_dG_min | Hairpin free energy (local UNAFold calculation) |
 
 ---
