@@ -102,12 +102,25 @@ You can change the column name using the `--col` argument.
 
 Run the tool using Docker:
 
+macOS / Linux (bash, zsh):
+
 ```
 docker run --rm \
 -v $(pwd):/app \
 primer-analyzer \
 --in input.csv \
 --out output.csv \
+--col PrimerSeq
+```
+
+Windows (PowerShell):
+
+```
+docker run --rm `
+-v ${PWD}:/app `
+primer-analyzer `
+--in input.csv `
+--out output.csv `
 --col PrimerSeq
 ```
 
